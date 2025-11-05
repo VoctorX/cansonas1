@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimizador de Tareas (9am-12pm) - Control Total S.A.S</title>
+    <title>Optimizador de Servicios - Control Total S.A.S</title>
     <!-- Incluye Tailwind CSS CDN para el estilo -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Incluye la librería de Chart.js para dibujar gráficos -->
@@ -12,10 +12,45 @@
     <script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver/prod/solver.js"></script>
     
     <style>
-        .input-group input {
-            /* Estilo de los inputs */
-            @apply w-full border border-gray-300 p-2 rounded-lg focus:ring-purple-600 focus:border-purple-600 transition duration-150;
+        /* Definición general de inputs base */
+        .input-group {
+            @apply mb-6 p-4 rounded-xl border-2 border-gray-300 hover:border-purple-400 transition-all;
+            background: linear-gradient(to right, #f0f9ff, #e6f7ff);
         }
+        
+        .input-group label {
+            @apply text-lg font-bold mb-2 block;
+        }
+        
+        .input-group input {
+            @apply w-full p-3 text-2xl font-bold rounded-lg shadow-inner;
+            border: 3px solid #cbd5e1;
+        }
+        
+        /* R1 - Azul */
+        #R1_limite {
+            @apply bg-blue-100 border-blue-500 focus:ring-4 focus:ring-blue-200;
+            color: #1e40af;
+        }
+
+        /* R2 - Rojo */
+        #R2_minimo {
+            @apply bg-red-100 border-red-500 focus:ring-4 focus:ring-red-200;
+            color: #dc2626;
+        }
+
+        /* R3 - Púrpura */
+        #R3_equipos {
+            @apply bg-purple-100 border-purple-500 focus:ring-4 focus:ring-purple-200;
+            color: #6b21a8;
+        }
+
+        /* C1/C2 - Verde */
+        #C1_ganancia, #C2_ganancia {
+            @apply bg-green-100 border-green-500 focus:ring-4 focus:ring-green-200;
+            color: #15803d;
+        }
+
         /* ESTABILIZACIÓN: Fuerza la relación de aspecto 1:1 para el gráfico */
         #chart-container {
             width: 100%;
@@ -41,30 +76,27 @@
             <h2 class="text-2xl font-bold text-purple-900 mb-4 border-b border-purple-200 pb-2">Formulación Matemática del Problema (Asignación 9am-12pm)</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                <!-- Variables CONTEXTUALIZADAS -->
                 <div>
-                    <h3 class="font-semibold text-lg text-gray-700">Variables de Decisión (Cantidad de Empleados):</h3>
+                    <h3 class="font-semibold text-lg text-gray-700">Variables de Decisión:</h3>
                     <ul class="list-disc list-inside ml-4 text-gray-800 space-y-1">
-                        <li>**X:** Empleados asignados a la **Unidad de Mayor Rentabilidad** (Eje X).</li>
-                        <li>**Y:** Empleados asignados a la **Unidad de Menor Rentabilidad** (Eje Y).</li>
+                        <li>X = Empleados en Servicio Alta Rentabilidad</li>
+                        <li>Y = Empleados en Servicio Baja Rentabilidad</li>
                     </ul>
-                    <p class="text-xs text-gray-600 mt-2">Ambos X e Y operan únicamente dentro de la franja 9am-12pm.</p>
                 </div>
-                <!-- Función Objetivo CONTEXTUALIZADA -->
                 <div>
-                    <h3 class="font-semibold text-lg text-gray-700">Meta: Maximizar el Beneficio (Función Objetivo MAX Z):</h3>
+                    <h3 class="font-semibold text-lg text-gray-700">Función Objetivo:</h3>
                     <p class="bg-purple-200 p-2 rounded font-mono text-xl text-purple-900 mt-1 shadow-md">
-                        MAX Z = C₁X + C₂Y
+                        MAX Z = 120X + 80Y
                     </p>
-                    <p class="text-xs text-gray-600 mt-2">Buscamos el máximo Beneficio (Z) posible, basado en el valor (C) de cada Unidad.</p>
+                    <p class="text-xs text-gray-600 mt-2">Beneficio en miles de COP por empleado</p>
                 </div>
-                 <!-- Restricciones CONTEXTUALIZADAS -->
                 <div>
-                    <h3 class="font-semibold text-lg text-gray-700">Reglas y Limitaciones (Restricciones Aplicadas):</h3>
+                    <h3 class="font-semibold text-lg text-gray-700">Restricciones:</h3>
                     <ul class="list-disc list-inside ml-4 text-gray-800 space-y-1">
-                        <li class="font-mono">R1: X + Y ≤ R₁ (Capacidad Máxima: El total de empleados en la franja 9am-12pm no puede superar el límite R₁).</li>
-                        <li class="font-mono">R2: Y ≥ R₂ (Mínimo Base: Necesitamos al menos R₂ empleados para la Unidad de Menor Rentabilidad para cubrir operaciones base).</li>
-                        <li class="font-mono">No Negatividad: X, Y ≥ 0 (No se puede asignar un número negativo de empleados).</li>
+                        <li class="font-mono text-blue-700 font-bold">X + Y ≤ 13 (Personal Total)</li>
+                        <li class="font-mono text-red-600 font-bold">Y ≥ 3 (Mínimo Servicio Básico)</li>
+                        <li class="font-mono text-purple-700 font-bold">2X + Y ≤ 18 (Límite Equipos)</li>
+                        <li class="font-mono">X, Y ≥ 0 (No Negatividad)</li>
                     </ul>
                 </div>
             </div>
@@ -78,24 +110,28 @@
                     <h2 class="text-xl font-bold text-purple-700 mb-4 border-b pb-2">⚙️ Parámetros de Optimización (Franja 9am-12pm)</h2>
                     
                     <div class="input-group mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">R1: Total Máximo de Empleados Disponibles (9am-12pm) (X + Y ≤)</label>
+                        <label class="block text-sm font-medium text-blue-700 font-semibold mb-1">R1: Límite Máximo de Empleados Disponibles (X + Y ≤)</label>
                         <input type="number" id="R1_limite" value="13" min="1" step="1" onchange="resolverYGraficar()">
                     </div>
                     
                     <div class="input-group mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">R2: Empleados Mínimos Requeridos para Unidad Menos Rentable (Y ≥)</label>
+                        <label class="block text-sm font-medium text-red-600 font-semibold mb-1">R2: Empleados Mínimos Requeridos para Cobertura (Y ≥)</label>
                         <input type="number" id="R2_minimo" value="3" min="1" step="1" onchange="resolverYGraficar()">
                     </div>
 
                     <div class="input-group mb-4">
-                        <!-- C1 es Productividad/Beneficio de la Unidad X -->
-                        <label class="block text-sm font-medium text-gray-700 mb-1">C1: Beneficio por Empleado en Unidad X (Mayor Rentabilidad) (x 1000 COP)</label>
+                        <label class="block text-sm font-medium text-purple-700 font-semibold mb-1">R3: Límite de Unidades de Flota/Equipo (2X + 1Y ≤)</label>
+                        <input type="number" id="R3_equipos" value="18" min="1" step="1" onchange="resolverYGraficar()">
+                        <p class="text-xs text-gray-500 mt-1">Asume: Tarea X consume 2 unidades de equipo; Tarea Y consume 1 unidad.</p>
+                    </div>
+
+                    <div class="input-group mb-4">
+                        <label class="block text-sm font-medium text-green-700 font-semibold mb-1">C1: Beneficio por Empleado en Unidad X (x 1000 COP)</label>
                         <input type="number" id="C1_ganancia" value="120" min="1" step="1" onchange="resolverYGraficar()">
                     </div>
 
                     <div class="input-group">
-                        <!-- C2 es Productividad/Beneficio de la Unidad Y -->
-                        <label class="block text-sm font-medium text-gray-700 mb-1">C2: Beneficio por Empleado en Unidad Y (Menor Rentabilidad) (x 1000 COP)</label>
+                        <label class="block text-sm font-medium text-green-700 font-semibold mb-1">C2: Beneficio por Empleado en Unidad Y (x 1000 COP)</label>
                         <input type="number" id="C2_ganancia" value="80" min="1" step="1" onchange="resolverYGraficar()">
                     </div>
                 </div>
@@ -111,7 +147,7 @@
                 <div id="chart-container" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
                     <canvas id="simplexChart"></canvas>
                 </div>
-                <p class="text-xs text-center text-gray-500 mt-3">El **punto rojo (★)** indica la distribución óptima de empleados entre la Unidad X (Mayor Rentabilidad) y la Unidad Y (Menor Rentabilidad) para la Ganancia Máxima en esta franja.</p>
+                <p class="text-xs text-center text-gray-500 mt-3">El **punto rojo (★)** indica la distribución óptima de empleados entre la Unidad X (Mayor Rentabilidad) y la Unidad Y (Menor Rentabilidad).</p>
             </div>
         </div>
     </div>
@@ -119,66 +155,141 @@
     <!-- Script de JavaScript y Lógica de Gráfico -->
     <script>
         let myChart;
+        
+        // Función auxiliar para resolver un sistema 2x2: a1*x + b1*y = c1, a2*x + b2*y = c2
+        function solve2x2(a1, b1, c1, a2, b2, c2) {
+            const determinant = a1 * b2 - a2 * b1;
+            if (Math.abs(determinant) < 1e-9) { // Casi cero, líneas paralelas o idénticas
+                return null; 
+            }
+            const x = (c1 * b2 - c2 * b1) / determinant;
+            const y = (a1 * c2 - a2 * c1) / determinant;
+            return { x: x, y: y };
+        }
+
+        // Función para verificar si un punto (x, y) es una solución factible
+        function isFeasible(x, y, R1, R2, R3) {
+            // No Negatividad
+            if (x < -1e-9 || y < -1e-9) return false; 
+            
+            // R1: X + Y <= R1 (Límite General de Personal)
+            if (x + y > R1 + 1e-9) return false; 
+            
+            // R2: Y >= R2 (Mínimo Obligatorio Cobertura)
+            if (y < R2 - 1e-9) return false; 
+            
+            // R3: 2X + 1Y <= R3 (Límite de Equipo)
+            if (2 * x + y > R3 + 1e-9) return false; 
+            
+            return true;
+        }
 
         function resolverYGraficar() {
-            // 1. Obtener valores de los inputs (C1 y C2 están en miles)
+            // 1. Obtener valores de los inputs
             const R1_limite = parseFloat(document.getElementById('R1_limite').value);
             const R2_minimo = parseFloat(document.getElementById('R2_minimo').value);
+            const R3_equipos = parseFloat(document.getElementById('R3_equipos').value);
             const C1_scaled = parseFloat(document.getElementById('C1_ganancia').value); 
             const C2_scaled = parseFloat(document.getElementById('C2_ganancia').value); 
             
-            // Definir el factor de escala para el resultado final (1000 para pasar de miles a COP)
             const SCALE_FACTOR = 1000;
 
-            // 2. Verificación de infactibilidad 
-            if (isNaN(R1_limite) || isNaN(R2_minimo) || isNaN(C1_scaled) || isNaN(C2_scaled) || R1_limite <= 0 || R2_minimo <= 0 || R2_minimo > R1_limite || C1_scaled <= 0 || C2_scaled <= 0) {
-                let errorMsg = 'Error: Los valores deben ser positivos y el Mínimo Requerido (R2) no puede exceder la Capacidad Máxima (R1).';
-                
+            // 2. Verificación de infactibilidad inicial (lógica y de entrada)
+            if (isNaN(R1_limite) || isNaN(R2_minimo) || isNaN(R3_equipos) || isNaN(C1_scaled) || isNaN(C2_scaled) || R1_limite <= 0 || R2_minimo < 0 || R3_equipos <= 0 || C1_scaled <= 0 || C2_scaled <= 0) {
+                let errorMsg = 'Error: Los límites (R1, R3, C1, C2) deben ser positivos.';
                 document.getElementById('resultados').innerHTML = `<p class="text-lg font-bold text-red-600">❌ ${errorMsg}</p>`;
                 if (myChart) myChart.destroy();
                 return;
             }
+            
+            // Verificar si el mínimo requerido (R2) excede la capacidad total (R1) o la capacidad de equipo (R3)
+            if (R2_minimo > R1_limite || R2_minimo > R3_equipos) {
+                 let errorMsg = 'Infactibilidad: El mínimo requerido (R2) excede la Capacidad Máxima de Personal (R1) o la Capacidad de Equipo (R3).';
+                 document.getElementById('resultados').innerHTML = `<p class="text-lg font-bold text-red-600">❌ ${errorMsg}</p>`;
+                 if (myChart) myChart.destroy();
+                 return;
+            }
 
-            // 3. CÁLCULO DETERMINÍSTICO POR ENUMERACIÓN DE VÉRTICES (Método Gráfico)
-            // Los vértices de la región factible para MAX Z = C₁X + C₂Y sujeto a X + Y ≤ R₁ y Y ≥ R₂ son:
-            /* P1: (0, R2)
-            P2: (R1 - R2, R2)
-            P3: (0, R1)
-            */
-            const vertices = [
-                // P1: (0, R2_minimo)
-                { x: 0, y: R2_minimo },
-                // P2: (R1_limite - R2_minimo, R2_minimo)
-                { x: R1_limite - R2_minimo, y: R2_minimo },
-                // P3: (0, R1_limite)
-                { x: 0, y: R1_limite }
-            ];
 
+            // 3. CÁLCULO DETERMINÍSTICO: ENUMERACIÓN DE VÉRTICES CANDIDATOS
+            let candidateVertices = [];
+            
+            // LÍNEAS PRINCIPALES:
+            // L1 (R1): X + Y = R1_limite   -> a1=1, b1=1, c1=R1_limite
+            // L2 (R2): Y = R2_minimo       -> a2=0, b2=1, c2=R2_minimo
+            // L3 (R3): 2X + Y = R3_equipos -> a3=2, b3=1, c3=R3_equipos
+            // L4 (X=0): X = 0             -> a4=1, b4=0, c4=0
+            
+            
+            // Intersecciones 2x2:
+
+            // I1: L4 (X=0) y L2 (Y=R2)
+            candidateVertices.push({ x: 0, y: R2_minimo });
+            
+            // I2: L4 (X=0) y L1 (X+Y=R1)
+            candidateVertices.push({ x: 0, y: R1_limite });
+            
+            // I3: L4 (X=0) y L3 (2X+Y=R3)
+            candidateVertices.push({ x: 0, y: R3_equipos });
+            
+            // I4: L1 (X+Y=R1) y L2 (Y=R2)
+            // X + R2 = R1 -> X = R1 - R2
+            candidateVertices.push({ x: R1_limite - R2_minimo, y: R2_minimo });
+            
+            // I5: L3 (2X+Y=R3) y L2 (Y=R2)
+            // 2X + R2 = R3 -> X = (R3 - R2) / 2
+            candidateVertices.push({ x: (R3_equipos - R2_minimo) / 2, y: R2_minimo });
+            
+            // I6: L1 (X+Y=R1) y L3 (2X+Y=R3)
+            const intersection_L1_L3 = solve2x2(1, 1, R1_limite, 2, 1, R3_equipos);
+            if (intersection_L1_L3) {
+                 candidateVertices.push(intersection_L1_L3);
+            }
+            
+            // 4. Filtrar y Evaluar Vértices Factibles
+            let factibleVertices = [];
+            
+            candidateVertices.forEach(p => {
+                // Redondear el punto para evitar problemas de flotantes y mantener la integridad de empleados
+                p.x = parseFloat(p.x.toFixed(6));
+                p.y = parseFloat(p.y.toFixed(6));
+
+                if (isFeasible(p.x, p.y, R1_limite, R2_minimo, R3_equipos)) {
+                    // CÁLCULO DE LA FUNCIÓN OBJETIVO para el vértice factible
+                    p.Z = (C1_scaled * p.x) + (C2_scaled * p.y);
+                    factibleVertices.push(p);
+                }
+            });
+
+            // 5. Encontrar la Solución Óptima
             let optX = 0;
             let optY = 0;
             let maxZ = -Infinity;
 
-            // Encontrar el vértice que maximiza Z = C₁X + C₂Y
-            vertices.forEach(p => {
-                // Cálculo de la Función Objetivo con valores escalados (C en miles)
-                const currentZ = (C1_scaled * p.x) + (C2_scaled * p.y);
-                
-                // Solo consideramos puntos que dan una mejor solución
-                if (p.x >= 0 && p.y >= 0 && currentZ > maxZ) {
-                    maxZ = currentZ;
-                    optX = Math.round(p.x); // Aseguramos valores enteros (número de empleados)
-                    optY = Math.round(p.y); // Aseguramos valores enteros (número de empleados)
-                }
-            });
-            
-            // 4. Mostrar Resultados
+            if (factibleVertices.length === 0) {
+                 // Si la región factible es vacía, los valores óptimos siguen siendo 0.
+            } else {
+                 factibleVertices.forEach(p => {
+                    if (p.Z > maxZ) {
+                        maxZ = p.Z;
+                        optX = Math.round(p.x); // Redondeo para número de empleados
+                        optY = Math.round(p.y); // Redondeo para número de empleados
+                    }
+                 });
+            }
+
+            // 6. Mostrar Resultados
             const resultadosDiv = document.getElementById('resultados');
             let output = '';
-            let maxBoundary = Math.ceil(R1_limite) + 5; 
+            // El límite superior del gráfico debe ser el mayor de R1 o R3
+            let maxBoundary = Math.ceil(Math.max(R1_limite, R3_equipos)) + 2; 
+
+            // Re-evaluar Z en el punto entero redondeado final (optX, optY)
+            const finalZ_scaled = (C1_scaled * optX) + (C2_scaled * optY);
             
-            if (maxZ > 0) {
+            if (finalZ_scaled > 0 && isFeasible(optX, optY, R1_limite, R2_minimo, R3_equipos)) {
                 // Re-escalar el resultado final para mostrarlo en COP
-                const finalResult = maxZ * SCALE_FACTOR; 
+                const finalResult = finalZ_scaled * SCALE_FACTOR; 
 
                 output += '<p class="text-xl font-bold text-green-700 mb-3 flex items-center">✨ Plan de Asignación Óptimo</p>';
                 output += `<p class="text-2xl font-extrabold mb-4 text-purple-800">Ganancia Potencial (MAX Z): <span class="text-red-600">${Math.round(finalResult).toLocaleString('es-CO')} COP</span></p>`;
@@ -193,48 +304,62 @@
 
             } else {
                 output += '<p class="text-lg font-bold text-red-600">❌ Solución Trivial o No Factible.</p>';
-                output += '<p class="text-gray-700">La ganancia óptima es cero, o el modelo no puede satisfacer los requerimientos. Revise los parámetros R1 y R2.</p>';
+                output += '<p class="text-gray-700">La ganancia óptima es cero, o el modelo no puede satisfacer los requerimientos. Revise los parámetros R1, R2 y R3.</p>';
             }
             resultadosDiv.innerHTML = output;
 
-            // 5. Graficar la Región Factible y el Punto Óptimo
-            dibujarGrafico(R1_limite, R2_minimo, optX, optY, maxBoundary);
+            // 7. Graficar la Región Factible y el Punto Óptimo
+            dibujarGrafico(R1_limite, R2_minimo, R3_equipos, optX, optY, maxBoundary);
         }
 
-        function dibujarGrafico(R1, R2, optX, optY, maxBoundary) {
+        function dibujarGrafico(R1, R2, R3, optX, optY, maxBoundary) {
             const ctx = document.getElementById('simplexChart').getContext('2d');
             
             if (myChart) {
                 myChart.destroy(); // Destruye el gráfico anterior
             }
             
-            // Definición de las líneas de restricción para el gráfico
-            // R1: X + Y = R1_limite -> Puntos (R1, 0) y (0, R1)
+            // Puntos para las líneas de restricción
+            
+            // R1: X + Y = R1 -> Puntos (R1, 0) y (0, R1)
             const R1_line = [{ x: 0, y: R1 }, { x: R1, y: 0 }]; 
-            // R2: Y = R2_minimo -> Línea horizontal en Y = R2
+            
+            // R2: Y = R2 -> Línea horizontal
             const R2_line = [{ x: 0, y: R2 }, { x: maxBoundary, y: R2 }];
+            
+            // R3: 2X + Y = R3 -> Puntos (R3/2, 0) y (0, R3)
+            const R3_line = [{ x: R3 / 2, y: 0 }, { x: 0, y: R3 }];
             
 
             myChart = new Chart(ctx, {
                 type: 'scatter',
                 data: {
                     datasets: [
-                        // R1: Límite de Capacidad Total
+                        // R1: Límite General de Personal (X + Y ≤ R1)
                         {
-                            label: `R1 (Máx. Empleados 9am-12pm): X + Y ≤ ${R1}`,
+                            label: `R1 (Máx. Personal): X + Y ≤ ${R1}`,
                             data: R1_line,
-                            borderColor: 'rgb(54, 162, 235)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)', // Sombra ligera
+                            borderColor: 'rgb(54, 162, 235)', // Azul
                             borderWidth: 3, 
                             showLine: true,
                             fill: false,
                             pointRadius: 0
                         },
-                        // R2: Límite Mínimo para Y
+                        // R2: Límite Mínimo Obligatorio para Y (Y ≥ R2)
                         {
-                            label: `R2 (Mínimo Base Unidad Y): Y ≥ ${R2}`,
+                            label: `R2 (Mínimo Obligatorio): Y ≥ ${R2}`,
                             data: R2_line,
-                            borderColor: 'rgb(255, 99, 132)',
+                            borderColor: 'rgb(255, 99, 132)', // Rojo/Rosa
+                            borderWidth: 3,
+                            showLine: true,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        // R3: Límite de Equipo (2X + 1Y ≤ R3)
+                        {
+                            label: `R3 (Máx. Equipo/Flota): 2X + 1Y ≤ ${R3}`,
+                            data: R3_line,
+                            borderColor: 'rgb(148, 0, 211)', // Púrpura
                             borderWidth: 3,
                             showLine: true,
                             fill: false,
